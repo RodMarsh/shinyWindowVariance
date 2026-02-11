@@ -46,7 +46,7 @@ This feature allows you to visualise the sensitivity of the stress score to the 
 1. Set the **Rolling Window** to **5 years** (high variability).
 2. Click **Ghost Current View**. A dashed line will freeze this "high noise" state.
 3. Move the **Rolling Window** to **30 years**.
-4. **Compare:** Observe how the solid lines (30-year) narrow and pull apart compared to the ghosted lines (5-year). The jump in the stress score quantifies exactly how much of the "impact" was previously hidden by noise.
+4. **Compare:** Observe how the solid lines (30-year) narrow and pull apart compared to the ghosted lines (5-year). The jump in the stress score shows the emergence of the signal from noise.
 
 ## Technical implementation
 
