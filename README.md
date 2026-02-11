@@ -23,7 +23,7 @@ Because this method relies on the overlap of probability distributions, for metr
 | **Short** (e.g. 5 years) | Higher | Higher | Lower |
 | **Long** (e.g. 30 years) | Lower | Lower | Higher |
 
-**The result:** If you use a rolling window to calculate an indicator of hydrological alteration, the stress score will rise with increased window length, even if the flow alteration (e.g. a reduction in annual flows) remains exactly the same. You are not changing the river — you are changing the statistical lens. This is a signal processing question, not a magnitude of impact question.
+**The result:** If you use a rolling window to calculate an indicator of hydrological alteration, the stress score will rise with increased window length, even if the flow alteration (e.g. a reduction in annual flows) remains constant. You are not changing the river — you are changing the statistical lens. This is a signal processing question, not a magnitude of impact question.
 
 ### Literature context
 
