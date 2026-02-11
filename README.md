@@ -10,20 +10,20 @@ Nathan et al. (2019) suggest one way to calculate hydrological "stress" from flo
 
 > The key concept involved is to characterise "hydrologic stress" relative to the range of behaviour encountered under baseline conditions [...] If the range of future behaviour lies largely within the range encountered under baseline conditions, then it can be concluded that the additional stress on the system due to climate change is low.
 
-However, implementations of Nathan et al.'s "stress score" (e.g. John et al., 2023; Morden et al., 2025) often apply a sliding window to calculate the relevant indicator of hydrological alteration (e.g. mean annual flows) through time. This introduces a statistical artefact that this model explores: **window dependency**.
+However, implementations of Nathan et al.'s "stress score" (e.g. John et al., 2023; Morden et al., 2025) often apply a sliding window to calculate the relevant indicator of hydrological alteration (e.g. mean annual flows) through time. This introduces a statistical artefact that this model explores: window dependency.
 
 ## Window dependency
 
-Users must be aware of a critical mathematical property of this score: **the stress score is dependent on the sample size (window length) used to calculate the flow metric.**
+Users must be aware of a critical mathematical property of this score: the stress score is dependent on the sample size (window length) used to calculate the flow metric.
 
-Because this method relies on the overlap of probability distributions, for metrics that average across n years, sampling variability generally decreases with window length (approximately as $1/\sqrt{n_\text{eff}}, where n_\text{eff}$ accounts for serial correlation), even when the physical alteration is unchanged.
+Because this method relies on the overlap of probability distributions, for metrics that average across n years, sampling variability generally decreases with window length (approximately as $1/\sqrt{n_\text{eff}}$, where $n_\text{eff}$ accounts for serial correlation), even when the physical alteration is unchanged.
 
 | Window length | Variance (noise) | Distribution overlap | Stress score |
 | :--- | :--- | :--- | :--- |
 | **Short** (e.g. 5 years) | Higher | Higher | Lower |
 | **Long** (e.g. 30 years) | Lower | Lower | Higher |
 
-**The result:** If you change the rolling window from 5 years to 30 years, the stress score will rise even if the flow alteration (the withdrawal) remains exactly the same. You are not changing the river — you are changing the statistical lens. This is a signal processing question, not a magnitude of impact question.
+**The result:** If you change the rolling window from 5 years to 30 years, the stress score will rise even if the flow alteration (e.g. a reduction in annual flows) remains exactly the same. You are not changing the river — you are changing the statistical lens. This is a signal processing question, not a magnitude of impact question.
 
 ### Literature context
 
@@ -86,6 +86,10 @@ Users can toggle the underlying probability distribution of the noise to test ro
 
 - **Overlap (noise)** — the area shared by the baseline and impacted distributions. An overlap of 1.0 indicates the impact is indistinguishable from natural variability.
 - **Stress score (signal)** — calculated as $1 - \text{Overlap}$ (signed by direction of change). A score of $\pm 1.0$ means the future regime is entirely novel — a "new normal" completely outside the historical range.
+
+## What the lower chart shows.
+
+The lower panel displays kernel density estimates of the rolling-window mean annual flow values computed from the simulated monthly time series after aggregation to annual means. For a selected window length (e.g., 5, 10, 20, or 30 years), the model first converts monthly flows to one mean value per year, then calculates a moving average across that many years, producing one windowed value per year once the window is full. The density curves therefore approximate the probability distribution of the rolling-window mean annual-flow metric across the full simulated record. Each curve integrates to one. The shaded overlap area represents the shared probability mass between the baseline and post-withdrawal distributions of that rolling mean annual statistic. Because adjacent rolling windows share most of the same years, the values contributing to the density are serially dependent; the chart represents the marginal distribution of the windowed annual-flow metric, not a set of independent multi-year samples.
 
 ## References
 
