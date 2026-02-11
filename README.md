@@ -6,7 +6,7 @@ This toy model shows how "stress" is not simply a measure of flow alteration —
 
 ## Window dependency
 
-Users must understand a mathematical property of this metric: **the stress score is dependent on the rolling window length.**
+Users should be aware of a mathematical property of this metric: **the stress score is dependent on the rolling window length.**
 
 Because this method relies on the overlap of probability distributions, increasing the window length will reduce the variance of the distributions:
 
@@ -25,7 +25,7 @@ John et al. (2023) build on Nathan et al.'s work and note:
 
 > "Metrics calculated over shorter hydroclimatic sequences are inherently more variable than those calculated over longer sequences, as sampling variability typically decreases with sample size. This suggests that a larger climate-induced change may be required for shorter sequences before the signal becomes dominant.”
 
-This a signal processing question, not a magnitude of impact question. Longer windows increase the effective sample size, reduce variance and make the signal more visible.
+This is a signal processing question, not a magnitude of impact question. Longer windows increase the effective sample size, reduce variance and make the signal more visible.
 
 ## Using the model
 
