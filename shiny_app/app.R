@@ -17,7 +17,8 @@ ui <- fluidPage(
         tabPanel("Distributions",
           br(),
           selectInput("dist_type", "Noise distribution",
-                      choices = c("Normal" = "norm", "Log-Normal" = "lnorm", "Weibull" = "weibull")),
+                      choices = c("Normal" = "norm", "Log-Normal" = "lnorm", "Weibull" = "weibull"),
+                      selected = "lnorm"),
           checkboxInput("detrend", "Remove trend", value = FALSE)
         )
       ),
