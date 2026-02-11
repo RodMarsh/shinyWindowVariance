@@ -2,6 +2,12 @@
 
 An interactive R Shiny toy model for exploring the concept of **hydrologic stress** as defined by Nathan et al. (2019).
 
+> Hydrologists are commonly involved in impact, adaption and vulnerability assessments for 12 climate change projections. This paper presents a framework for how such assessments can 13 better differentiate between the impacts of climate change and those of natural variability, an 14 important differentiation as it relates to the vulnerability to water availability under change. 15 The key concept involved is to characterize “hydrologic stress” relative to the range of 16 behaviour encountered under baseline conditions, where the degree to which climate change 17 causes the behaviour of a system to shift outside this baseline range provides a non- 18 dimensional measure of stress.
+
+> The distribution of outcomes under current conditions 192 defines the range of behaviour that the system currently exhibits. The distribution of outcomes 193 represents the uncertainty in system performance due to natural variability under a set of baseline 194 conditions. In the built environment it might be expected that this range of outcomes corresponds 195 to performance levels that the system has been designed to accommodate, and in the natural 196 environment it might be expected that this represents the range of environmental conditions that 197 a species has adapted to. The distribution corresponding to a future climate indicates the change in behaviour resulting from a projected change in climate conditions. The shift in the location and scale of these distributions reflects the impacts of climate over a time scale represented by the characteristic period of most importance to the system of interest. If the range of future behaviour lies largely within the range encountered under baseline conditions, then it can be concluded that the additional stress on the system due to climate change is low. Conversely, if the range of behaviour under projected future conditions lies mostly outside the range that the system is accustomed to, then the degree of stress is high. The degree of shift in the central tendency of the distributions could provide a quantitative measure of system stress. For example, the degree of shift in the median response could be represented non-dimensionally as a proportion of the standard deviation of performance metrics obtained under baseline conditions. Alternatively, a measure could be developed whereby the degree of shift is represented in terms of the proportion of overlap between the distributions of both scenarios. [...] a metric value of − 1 indicates that the entire range of future outcomes lies wholly below the range of baseline conditions, and a metric value of + 1 indicates that the range of future conditions lies wholly above baseline behaviour. A metric near zero indicates that the behaviour under future conditions is very similar to baseline conditions.
+
+John et al. (2023) and Morden et al. (2025) use a sliding window to calculate change factors through time. 
+
 This toy model shows how "stress" is not simply a measure of flow alteration — it is a statistical relationship between the magnitude of alteration and the natural variability of the system over a specific timeframe.
 
 ## Window dependency
@@ -21,7 +27,7 @@ Studies using Nathan et al.'s stress score should be aware of the impact of wind
 
 > The first aspect of key importance is the typical time period—here termed “characteristic 126 period”—over which a system may be vulnerable to failure […] A water supply that relies on a diversion weir with little storage may be vulnerable to droughts lasting a few weeks or months, whereas a system with a storage capacity able to 129 impound runoff over two or more years will be sensitive to multi-year droughts. […] The relevant period for some short-lived fish might be 1 year while that for long-lived fish, or riparian wetland systems, may be 15 years or longer.
 
-John et al. (2023) build on Nathan et al.'s work and note:
+John et al. (2023) note:
 
 > "Metrics calculated over shorter hydroclimatic sequences are inherently more variable than those calculated over longer sequences, as sampling variability typically decreases with sample size. This suggests that a larger climate-induced change may be required for shorter sequences before the signal becomes dominant.”
 
@@ -76,7 +82,7 @@ Users can toggle the underlying probability distribution of the noise to test ro
 ## Metric definitions
 
 - **Overlap (noise)** — the area shared by the baseline and impacted distributions. An overlap of 1.0 indicates the impact is indistinguishable from natural variability.
-- **Stress score (signal)** — calculated as $1 - \text{Overlap}$ (signed by direction of change). A score of 1.0 means the future regime is entirely novel — a "new normal" completely outside the historical range.
+- **Stress score (signal)** — calculated as $1 - \text{Overlap}$ (signed by direction of change). A score of +/-1.0 means the future regime is entirely novel — a "new normal" completely outside the historical range.
 
 ## References
 
