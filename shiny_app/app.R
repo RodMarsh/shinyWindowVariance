@@ -123,8 +123,8 @@ server <- function(input, output, session) {
     stress <- (1 - overlap_area) * direction
     
     list(
-      overlap = round(overlap_area * 100, 1),
-      stress = round(stress * 100, 1)
+      overlap = round(overlap_area, 1),
+      stress = round(stress, 1)
     )
   }
 
@@ -218,14 +218,14 @@ server <- function(input, output, session) {
     
     # Text construction
     txt_curr <- paste0("Current (", input$window, "yr):\n",
-                       "  Overlap: ", curr_metrics$overlap, "%\n",
-                       "  Stress:  ", curr_metrics$stress, "%")
+                       "  Overlap: ", curr_metrics$overlap, "\n",
+                       "  Stress:  ", curr_metrics$stress)
     
     txt_final <- txt_curr
     if(!is.null(v$shadow_win)) {
       txt_ghost <- paste0("\n\nGhost (", v$shadow_win, "yr):\n",
-                          "  Overlap: ", v$shadow_metrics$overlap, "%\n",
-                          "  Stress:  ", v$shadow_metrics$stress, "%")
+                          "  Overlap: ", v$shadow_metrics$overlap, "\n",
+                          "  Stress:  ", v$shadow_metrics$stress)
       txt_final <- paste0(txt_curr, txt_ghost)
     }
     
