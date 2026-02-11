@@ -12,16 +12,16 @@ This toy model shows how "stress" is not simply a measure of flow alteration —
 
 ## Window dependency
 
-Users should be aware of a mathematical property of this metric: **the stress score is dependent on the sample size**, which is often controlled by rolling window length.
+Users should be aware of a mathematical property of this score: **the stress score is dependent on the sample size used to calculate the flow alteration metric**, which is often controlled by setting a rolling (or sliding) window length for flow alteration metric calculation.
 
-Because this method relies on the overlap of probability distributions, increasing the window length (sample size) will reduce the variance of the distributions:
+Because this method relies on the overlap of probability distributions, increasing the sample size, for example by increasing window length, will reduce the variance of the distributions:
 
 | Window length | Variance | Distribution overlap | Stress score |
 |:---|:---|:---|:---|
 | Short (e.g. 5 years) | High | High | Low |
 | Long (e.g. 30 years) | Low | Low | High |
 
-> **Result:** If you change the rolling window for the calculation of a flow alteration metric from 5 years to 30 years, the stress score will rise even if the flow alteration remains exactly the same. You are not changing the magnitude of flow alteration — you are changing the statistical lens.
+**Result:** If you change the rolling window for the calculation of a flow alteration metric from 5 years to 30 years, the stress score will rise even if the flow alteration remains exactly the same. You are not changing the magnitude of flow alteration — you are changing the statistical lens.
 
 Studies using Nathan et al.'s stress score should be aware of the impact of window length choices over stress score results. Nathan et al. note:
 
@@ -29,7 +29,7 @@ Studies using Nathan et al.'s stress score should be aware of the impact of wind
 
 John et al. (2023) note:
 
-> "Metrics calculated over shorter hydroclimatic sequences are inherently more variable than those calculated over longer sequences, as sampling variability typically decreases with sample size. This suggests that a larger climate-induced change may be required for shorter sequences before the signal becomes dominant.”
+> Metrics calculated over shorter hydroclimatic sequences are inherently more variable than those calculated over longer sequences, as sampling variability typically decreases with sample size. This suggests that a larger climate-induced change may be required for shorter sequences before the signal becomes dominant.
 
 This is a signal processing question, not a magnitude of impact question. Longer windows increase the effective sample size, reduce variance and make the signal more visible.
 
@@ -65,7 +65,7 @@ where:
 
 ### The noise function
 
-The noise term $\text{Nnise}(t)$ is generated to ensure statistical control. Regardless of the chosen distribution shape, the noise is centred and scaled to match the user-defined $\sigma$:
+The noise term $\text{Noise}(t)$ is generated to ensure statistical control. Regardless of the chosen distribution shape, the noise is centred and scaled to match the user-defined $\sigma$:
 
 $$\text{noise} = (X - \bar{X}) \times \frac{\sigma}{\text{sd}(X)}$$
 
