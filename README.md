@@ -82,12 +82,12 @@ Users can toggle the underlying probability distribution of the noise to test ro
 - **Log-normal** — right-skewed; representative of real-world river flows where flows cannot be negative but can have high outliers.
 - **Weibull** — simulates regimes driven by extreme events or "fat tails."
 
-## Metric definitions provided
+## Metric definitions provided by the authors
 
 - **Overlap** — the area shared by the baseline and impacted distributions. An overlap of 1.0 indicates the impact is indistinguishable from natural variability.
-- **Stress score** — calculated as $1 - \text{Overlap}$ (signed by direction of change). A score of $\pm 1.0$ means the future regime is entirely novel — a "new normal" completely outside the historical range.
+- **Stress score** — calculated as $1 - \text{Overlap}$ (signed by direction of change). A score of $\pm 1.0$ is taken to indicate that the altered flow regime is entirely novel — a "new normal" completely outside the historical range.
 
-If a change in window length can move the stress score from -0.2 to -1.0, does -1.0 always reflect a "new regime"? 
+However, if a change in window length can move the stress score from -0.2 to -1.0 for a relatively small constant change, does -1.0 always reflect a "new regime"? 
 
 ## What the lower chart shows.
 
