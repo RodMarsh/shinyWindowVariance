@@ -16,7 +16,7 @@ However, implementations of Nathan et al.'s "stress score" (e.g. John et al., 20
 
 Users must be aware of a critical mathematical property of this score: **the stress score is dependent on the sample size (window length) used to calculate the flow metric.**
 
-Because this method relies on the overlap of probability distributions, the Central Limit Theorem dictates that increasing the sample size will reduce the variance of the sampling distribution (standard error scales as $1/\sqrt{n}$), even if the underlying physical signal remains constant.
+Because this method relies on the overlap of probability distributions, for metrics that average across n years, sampling variability generally decreases with window length (approximately as $1/\sqrt{n_\text{eff}}, where n_\text{eff}$ accounts for serial correlation), even when the physical alteration is unchanged.
 
 | Window length | Variance (noise) | Distribution overlap | Stress score |
 | :--- | :--- | :--- | :--- |
