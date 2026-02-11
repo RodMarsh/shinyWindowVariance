@@ -18,8 +18,8 @@ Because this method relies on the overlap of probability distributions, increasi
 
 | Window length | Variance | Distribution overlap | Stress score |
 |:---|:---|:---|:---|
-| Short (e.g. 5 years) | High | High | Low |
-| Long (e.g. 30 years) | Low | Low | High |
+| Short (e.g. 5 years) | Higher | Higher | Lower |
+| Long (e.g. 30 years) | Lower | Lower | Higher |
 
 **Result:** If you change the rolling window for the calculation of a flow alteration metric from 5 years to 30 years, the stress score will rise even if the flow alteration remains exactly the same. You are not changing the magnitude of flow alteration — you are changing the statistical lens.
 
