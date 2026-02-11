@@ -9,10 +9,10 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("Parameters",
           br(),
-          numericInput("samples", "Total months modeled", value = 2000, min = 100, step = 100),
+          numericInput("samples", "Total months modeled", value = 1200, min = 100, step = 100),
           sliderInput("gap", "Withdrawal signal (gap)", min = 0, max = 10, value = 0.5, step = 0.5),
           sliderInput("noise", "Noise magnitude (sigma)", min = 1, max = 30, value = 15),
-          sliderInput("trend", "Annual trend (gain/loss)", min = -0.5, max = 0.5, value = 0.0, step = 0.05)
+          sliderInput("trend", "Annual trend (gain/loss)", min = -0.02, max = 0.02, value = 0.0, step = 0.002)
         ),
         tabPanel("Distributions",
           br(),
@@ -74,71 +74,92 @@ server <- function(input, output, session) {
     
     # Trend logic
     current_trend <- if(input$detrend) 0 else input$trend
-    natural <- 60 + (current_trend * t) + noise_raw
+    monthly_trend <- current_trend / 12
+    natural <- 60 + (monthly_trend * t) + noise_raw
     post <- natural - input$gap
     
     # Return as list (lighter than data.frame)
     list(Month = t, Natural = natural, Post = post)
   })
   
-  # 3. Process rolling means
-  processed <- reactive({
-    d <- data_gen()
-    w_months <- as.numeric(input$window) * 12
-    
-    # Apply rolling mean
-    nat_roll <- manual_roll(d$Natural, w_months)
-    post_roll <- manual_roll(d$Post, w_months)
-    
-    # Remove NAs created by the filter
-    valid_idx <- !is.na(nat_roll)
-    
-    list(
-      Month = d$Month[valid_idx],
-      Natural = d$Natural[valid_idx], # Keep raw for background
-      Post = d$Post[valid_idx],
-      Nat_Roll = nat_roll[valid_idx],
-      Post_Roll = post_roll[valid_idx]
-    )
-  })
+  # 3. Process monthly series, annual means, then rolling means (in years)
+    processed <- reactive({
+      d <- data_gen()
+
+      # Annual aggregation from monthly series
+      yearIndex <- floor((d$Month - 1) / 12) + 1
+      natAnnual <- as.numeric(tapply(d$Natural, yearIndex, mean))
+      postAnnual <- as.numeric(tapply(d$Post, yearIndex, mean))
+
+      # Rolling window in years (one value per year)
+      wYears <- as.numeric(input$window)
+      natRoll <- manual_roll(natAnnual, wYears)
+      postRoll <- manual_roll(postAnnual, wYears)
+
+      # Valid years after rolling window fills
+      validIdx <- !is.na(natRoll)
+
+      # Month positions for each annual point (end of each year)
+      yearCount <- length(natAnnual)
+      yearEndMonth <- seq_len(yearCount) * 12
+
+      list(
+        # Monthly series (for the noisy background)
+        Month = d$Month,
+        Natural = d$Natural,
+        Post = d$Post,
+
+        # Annual series (one value per year)
+        Year = seq_len(yearCount),
+        YearEndMonth = yearEndMonth,
+        NatAnnual = natAnnual,
+        PostAnnual = postAnnual,
+
+        # Rolling annual means (aligned to Year / YearEndMonth)
+        Nat_Roll = natRoll,
+        Post_Roll = postRoll,
+        ValidIdx = validIdx
+      )
+    })
 
   # 4. Metric calculation (overlap & stress)
   calc_metrics <- function(nat, post) {
-    # Compute densities on a common grid to calculate intersection area
-    x_range <- range(c(nat, post))
-    # Extend range slightly to prevent cutoff
-    from <- x_range[1] - 10
-    to <- x_range[2] + 10
-    
-    d1 <- density(nat, from = from, to = to, n = 512)
-    d2 <- density(post, from = from, to = to, n = 512)
-    
-    # Overlap is the intersection of the two curves
-    # Area = sum(min(y1, y2)) * dx
-    dx <- d1$x[2] - d1$x[1]
-    overlap_area <- sum(pmin(d1$y, d2$y)) * dx
-    
-    # Stress direction (median shift)
-    direction <- if(median(post) < median(nat)) -1 else 1
-    stress <- (1 - overlap_area) * direction
-    
-    list(
-      overlap = round(overlap_area, 1),
-      stress = round(stress, 1)
-    )
-  }
+      nat <- nat[is.finite(nat)]
+      post <- post[is.finite(post)]
+
+      x_range <- range(c(nat, post))
+      from <- x_range[1] - 10
+      to <- x_range[2] + 10
+
+      d1 <- density(nat, from = from, to = to, n = 512)
+      d2 <- density(post, from = from, to = to, n = 512)
+
+      dx <- d1$x[2] - d1$x[1]
+      overlap_area <- sum(pmin(d1$y, d2$y)) * dx
+
+      direction <- if (median(post) < median(nat)) -1 else 1
+      stress <- (1 - overlap_area) * direction
+
+      list(
+        overlap = round(overlap_area, 1),
+        stress = round(stress, 1)
+      )
+    }
 
   # 5. Ghosting logic
   observeEvent(input$save_shadow, {
-    d <- processed()
-    metrics <- calc_metrics(d$Nat_Roll, d$Post_Roll)
-    
-    # Store the density objects directly
-    v$shadow_dens_nat <- density(d$Nat_Roll)
-    v$shadow_dens_post <- density(d$Post_Roll)
-    v$shadow_metrics <- metrics
-    v$shadow_win <- input$window
-  })
+      d <- processed()
+
+      nat <- d$Nat_Roll[d$ValidIdx]
+      post <- d$Post_Roll[d$ValidIdx]
+
+      metrics <- calc_metrics(nat, post)
+
+      v$shadow_dens_nat <- density(nat)
+      v$shadow_dens_post <- density(post)
+      v$shadow_metrics <- metrics
+      v$shadow_win <- input$window
+    })
   
   observeEvent(input$clear_shadow, {
     v$shadow_dens_nat <- NULL
@@ -149,34 +170,42 @@ server <- function(input, output, session) {
 
   # 6. Base R time plot
   output$timePlot <- renderPlot({
-    d <- processed()
-    
-    # Setup canvas
-    par(mar = c(4, 4, 2, 1))
-    plot(d$Month, d$Natural, type = "n", 
-         ylim = range(c(d$Natural, d$Post), na.rm=TRUE),
-         ylab = "Flow volume", xlab = "Month",
-         main = "Rolling mean vs. raw values")
-    
-    # Raw noise (faint)
-    lines(d$Month, d$Natural, col = adjustcolor("blue", alpha.f = 0.15))
-    lines(d$Month, d$Post, col = adjustcolor("orange", alpha.f = 0.15))
-    
-    # Rolling signal (solid)
-    lines(d$Month, d$Nat_Roll, col = "blue", lwd = 2)
-    lines(d$Month, d$Post_Roll, col = "orange", lwd = 2)
-    
-    legend("topleft", legend = c("Baseline", "Post-withdrawal"), 
-           col = c("blue", "orange"), lwd = 2, bty = "n")
-  })
+      d <- processed()
+
+      yAll <- range(
+        c(d$Natural, d$Post, d$NatAnnual, d$PostAnnual, d$Nat_Roll, d$Post_Roll),
+        na.rm = TRUE
+      )
+
+      par(mar = c(4, 4, 2, 1))
+      plot(d$Month, d$Natural, type = "n",
+          ylim = yAll,
+          ylab = "Flow volume", xlab = "Month",
+          main = "Monthly flows with annual rolling mean")
+
+      # Monthly noise (faint)
+      lines(d$Month, d$Natural, col = adjustcolor("blue", alpha.f = 0.15))
+      lines(d$Month, d$Post, col = adjustcolor("orange", alpha.f = 0.15))
+
+      # Annual rolling mean (bold), positioned at end-of-year months
+      xRoll <- d$YearEndMonth[d$ValidIdx]
+      lines(xRoll, d$Nat_Roll[d$ValidIdx], col = "blue", lwd = 2)
+      lines(xRoll, d$Post_Roll[d$ValidIdx], col = "orange", lwd = 2)
+
+      legend("topleft", legend = c("Baseline", "Post-withdrawal"),
+            col = c("blue", "orange"), lwd = 2, bty = "n")
+    })
 
   # 7. Base R distribution plot
   output$distPlot <- renderPlot({
-    d <- processed()
-    
+  d <- processed()
+
+    nat <- d$Nat_Roll[d$ValidIdx]
+    post <- d$Post_Roll[d$ValidIdx]
+
     # Calculate current densities
-    d_nat <- density(d$Nat_Roll)
-    d_post <- density(d$Post_Roll)
+    d_nat <- density(nat)
+    d_post <- density(post)
     
     # Compute combined "System Profile" (Average of the two densities)
     # We need to approximate d_post onto d_nat's grid to add them
@@ -214,7 +243,7 @@ server <- function(input, output, session) {
     #lines(d_nat$x, system_y, col = "black", lwd = 2.5)
     
     # --- Annotations (in box) ---
-    curr_metrics <- calc_metrics(d$Nat_Roll, d$Post_Roll)
+    curr_metrics <- calc_metrics(nat, post)
     
     # Text construction
     txt_curr <- paste0("Current (", input$window, "yr):\n",
