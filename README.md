@@ -14,7 +14,7 @@ However, implementations of Nathan et al.'s "stress score" (e.g. John et al., 20
 
 ## Window dependency
 
-Users must be aware of a critical mathematical property of this score: the stress score is dependent on the sample size (window length) used to calculate the flow metric.
+Users should be aware of a mathematical property of this score: the stress score is dependent on the sample size (window length) used to calculate the flow metric.
 
 Because this method relies on the overlap of probability distributions, for metrics that average across n years, sampling variability generally decreases with window length (approximately as $1/\sqrt{n_\text{eff}}$, where $n_\text{eff}$ accounts for serial correlation), even when the physical alteration is unchanged.
 
@@ -23,7 +23,7 @@ Because this method relies on the overlap of probability distributions, for metr
 | **Short** (e.g. 5 years) | Higher | Higher | Lower |
 | **Long** (e.g. 30 years) | Lower | Lower | Higher |
 
-**The result:** If you change the rolling window from 5 years to 30 years, the stress score will rise even if the flow alteration (e.g. a reduction in annual flows) remains exactly the same. You are not changing the river — you are changing the statistical lens. This is a signal processing question, not a magnitude of impact question.
+**The result:** If you use a rolling window to calculate an indicator of hydrological alteration, the stress score will rise with increased window length, even if the flow alteration (e.g. a reduction in annual flows) remains exactly the same. You are not changing the river — you are changing the statistical lens. This is a signal processing question, not a magnitude of impact question.
 
 ### Literature context
 
