@@ -1,3 +1,5 @@
+[![Launch App](https://img.shields.io/badge/Launch-app-blue?style=for-the-badge&logo=R)](https://rodmarsh.github.io/shinyWindowVariance/)
+
 # The relativity of hydrologic stress
 
 An interactive R Shiny toy model for exploring the statistical properties of **hydrologic stress** as defined by Nathan et al. (2019).
