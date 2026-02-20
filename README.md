@@ -1,4 +1,4 @@
-[![Launch App](https://img.shields.io/badge/Launch-app-blue?style=for-the-badge&logo=R)](https://rodmarsh.github.io/shinyWindowVariance/)
+[![Launch App](https://img.shields.io/badge/Launch-app-blue?style=for-the-badge&logo=R)](https://rodmarsh.github.io/shinyWindowVariance/) *(Cmd/Ctrl + Click to open in a new tab)*
 
 # The relativity of hydrologic stress
 
