@@ -26,8 +26,17 @@ ui <- fluidPage(
       selectInput("window", "Rolling window (years)", choices = c(5, 10, 20, 30), selected = 5),
       
       actionButton("save_shadow", "Ghost current view", icon = icon("ghost"), class = "btn-info"),
-      actionButton("clear_shadow", "Clear ghosts", icon = icon("trash"))
-    ),
+      actionButton("clear_shadow", "Clear ghosts", icon = icon("trash")),
+      
+      # --- NEW LINK PLACEMENT ---
+      # This is now safely INSIDE the sidebarPanel
+      hr(),
+      tags$a(href = "https://github.com/RodMarsh/shinyWindowVariance", 
+             "View Documentation (README)", 
+             target = "_blank", 
+             style = "font-weight: bold; color: #337ab7;")
+             
+    ), # <--- THIS is the end of the sidebarPanel
     
     mainPanel(
       plotOutput("timePlot", height = "300px"),
