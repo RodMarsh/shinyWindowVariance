@@ -14,18 +14,42 @@ Nathan et al. (2019) suggest one way to calculate hydrological "stress" from flo
 
 However, implementations of Nathan et al.'s "stress score" (e.g. John et al., 2023; Morden et al., 2025) often apply a sliding window to calculate the relevant indicator of hydrological alteration (e.g. mean annual flows) through time. This introduces a statistical artefact that this model explores: window dependency.
 
-## Window dependency
-
 Users should be aware of a mathematical property of this score: the stress score is dependent on the sample size (window length) used to calculate the flow metric.
 
-Because this method relies on the overlap of probability distributions, for metrics that average across n years, sampling variability generally decreases with window length (approximately as $1/\sqrt{n_\text{eff}}$, where $n_\text{eff}$ accounts for serial correlation), even when the physical alteration is unchanged.
+## Interpreting window dependency: sample size vs averaging
+
+It is important to distinguish between two different “n” effects:
+
+A. Increasing the number of independent samples from the same distribution.
+With more observations, estimates become more precise, but the underlying distribution does not change.
+
+B. Changing the variance of the metric itself through temporal averaging.
+When indicators are calculated over rolling windows (e.g. 5-, 10-, or 30-year means), the variability of the metric decreases as window length increases (approximately proportional to 1/\sqrt{n_\text{eff}}, accounting for serial correlation).
 
 | Window length | Variance (noise) | Distribution overlap | Stress score |
 | :--- | :--- | :--- | :--- |
 | **Short** (e.g. 5 years) | Higher | Higher | Lower |
 | **Long** (e.g. 30 years) | Lower | Lower | Higher |
 
-**The result:** If you use a rolling window to calculate an indicator of hydrological alteration, the stress score will rise with increased window length, even if the flow alteration (e.g. a reduction in annual flows) remains constant. You are not changing the river — you are changing the statistical lens. This is a signal processing question, not a magnitude of impact question.
+The window dependency demonstrated in this model arises from (B), not (A). The issue is not that more data are being used, but that averaging changes the variance of the indicator itself.
+
+## What the model shows
+
+Nathan et al.’s stress formulation compares the distribution of an indicator under baseline and altered conditions. In practice, this means stress depends on the ratio:
+
+\frac{\Delta}{\sigma}
+
+where:
+- \Delta is the shift between baseline and scenario,
+- \sigma is the variability of the indicator.
+
+When rolling windows are used, \sigma decreases mechanically as window length increases. Even if the physical alteration \Delta remains constant, the ratio \Delta/\sigma increases. As a result, stress scores rise with window length.
+
+This behaviour is not specific to any single test. Whether overlap-based metrics, rank-based measures, or distributional distances (e.g. Kuiper’s statistic) are used, all depend in some way on the relative separation of distributions. If averaging reduces variability, apparent separation increases.
+
+The underlying issue is therefore not the choice of metric, but the temporal aggregation applied to the indicator.
+
+The key point is not that the stress metric is “wrong,” but that it is sensitive to analyst-defined temporal aggregation. Window length changes the statistical lens through which alteration is viewed, and this can materially alter the interpretation of stress.
 
 ### Literature context
 

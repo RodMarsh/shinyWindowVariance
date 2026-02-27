@@ -9,7 +9,7 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("Parameters",
           br(),
-          numericInput("samples", "Total months modeled", value = 1200, min = 100, step = 100),
+          numericInput("samples", "Record length (months): affects precision, not averaging variance", value = 1200, min = 100, step = 100),
           sliderInput("gap", "Withdrawal signal (gap)", min = 0, max = 10, value = 0.5, step = 0.5),
           sliderInput("noise", "Noise magnitude (sigma)", min = 1, max = 30, value = 15),
           sliderInput("trend", "Annual trend (gain/loss)", min = -0.02, max = 0.02, value = 0.0, step = 0.002)
@@ -23,24 +23,24 @@ ui <- fluidPage(
         )
       ),
       hr(),
-      selectInput("window", "Rolling window (years)", choices = c(5, 10, 20, 30), selected = 5),
+      selectInput("window", "Rolling window (years): changes averaging variance (σ)", choices = c(5, 10, 20, 30), selected = 5),
       
       actionButton("save_shadow", "Ghost current view", icon = icon("ghost"), class = "btn-info"),
       actionButton("clear_shadow", "Clear ghosts", icon = icon("trash")),
       
-      # --- NEW LINK PLACEMENT ---
-      # This is now safely INSIDE the sidebarPanel
       hr(),
       tags$a(href = "https://github.com/RodMarsh/shinyWindowVariance", 
              "View Documentation (README)", 
              target = "_blank", 
              style = "font-weight: bold; color: #337ab7;")
              
-    ), # <--- THIS is the end of the sidebarPanel
+    ),
     
     mainPanel(
       plotOutput("timePlot", height = "300px"),
-      plotOutput("distPlot", height = "500px")
+      plotOutput("distPlot", height = "500px"),
+      h4("Stress vs window length"),
+      uiOutput("summaryTable")
     )
   )
 )
@@ -56,9 +56,7 @@ server <- function(input, output, session) {
     shadow_win = NULL
   )
   
-  # 1. Custom rolling mean function (replaces 'zoo' package)
   manual_roll <- function(x, k) {
-    # stats::filter computes moving averages. sides=1 means "past values" (align right)
     as.numeric(stats::filter(x, rep(1/k, k), sides = 1))
   }
   
@@ -87,7 +85,6 @@ server <- function(input, output, session) {
     natural <- 60 + (monthly_trend * t) + noise_raw
     post <- natural - input$gap
     
-    # Return as list (lighter than data.frame)
     list(Month = t, Natural = natural, Post = post)
   })
   
@@ -131,11 +128,12 @@ server <- function(input, output, session) {
       )
     })
 
-  # 4. Metric calculation (overlap & stress)
+  # 4. Metric calculation (overlap, stress, decomposition, Kuiper V)
   calc_metrics <- function(nat, post) {
       nat <- nat[is.finite(nat)]
       post <- post[is.finite(post)]
 
+      # Overlap & stress
       x_range <- range(c(nat, post))
       from <- x_range[1] - 10
       to <- x_range[2] + 10
@@ -149,9 +147,26 @@ server <- function(input, output, session) {
       direction <- if (median(post) < median(nat)) -1 else 1
       stress <- (1 - overlap_area) * direction
 
+      # Decomposition
+      delta <- median(post) - median(nat)
+      sigma <- sd(nat)
+      delta_sigma <- if (sigma > 0) delta / sigma else NA
+
+      # Kuiper V (descriptive, no p-value)
+      xGrid <- sort(unique(c(nat, post)))
+      F1 <- ecdf(nat)(xGrid)
+      F2 <- ecdf(post)(xGrid)
+      Dplus <- max(F1 - F2)
+      Dminus <- max(F2 - F1)
+      kuiper_v <- Dplus + Dminus
+
       list(
-        overlap = round(overlap_area, 1),
-        stress = round(stress, 1)
+        overlap = round(overlap_area, 3),
+        stress = round(stress, 3),
+        delta = round(delta, 3),
+        sigma = round(sigma, 3),
+        delta_sigma = round(delta_sigma, 3),
+        kuiper_v = round(kuiper_v, 3)
       )
     }
 
@@ -216,8 +231,6 @@ server <- function(input, output, session) {
     d_nat <- density(nat)
     d_post <- density(post)
     
-    # Compute combined "System Profile" (Average of the two densities)
-    # We need to approximate d_post onto d_nat's grid to add them
     d_post_interp <- approx(d_post$x, d_post$y, xout = d_nat$x, rule = 2)$y
     system_y <- (d_nat$y + d_post_interp) / 2
     
@@ -255,15 +268,25 @@ server <- function(input, output, session) {
     curr_metrics <- calc_metrics(nat, post)
     
     # Text construction
+    ds_label <- if (is.na(curr_metrics$delta_sigma)) "NA" else curr_metrics$delta_sigma
     txt_curr <- paste0("Current (", input$window, "yr):\n",
+                       "  \u0394 (shift): ", curr_metrics$delta, "\n",
+                       "  \u03c3 (baseline SD): ", curr_metrics$sigma, "\n",
+                       "  \u0394/\u03c3: ", ds_label, "\n",
                        "  Overlap: ", curr_metrics$overlap, "\n",
-                       "  Stress:  ", curr_metrics$stress)
-    
+                       "  Stress:  ", curr_metrics$stress, "\n",
+                       "  Kuiper V: ", curr_metrics$kuiper_v, " (shape metric)")
+
     txt_final <- txt_curr
     if(!is.null(v$shadow_win)) {
+      ghost_ds <- if (is.na(v$shadow_metrics$delta_sigma)) "NA" else v$shadow_metrics$delta_sigma
       txt_ghost <- paste0("\n\nGhost (", v$shadow_win, "yr):\n",
+                          "  \u0394 (shift): ", v$shadow_metrics$delta, "\n",
+                          "  \u03c3 (baseline SD): ", v$shadow_metrics$sigma, "\n",
+                          "  \u0394/\u03c3: ", ghost_ds, "\n",
                           "  Overlap: ", v$shadow_metrics$overlap, "\n",
-                          "  Stress:  ", v$shadow_metrics$stress)
+                          "  Stress:  ", v$shadow_metrics$stress, "\n",
+                          "  Kuiper V: ", v$shadow_metrics$kuiper_v, " (shape metric)")
       txt_final <- paste0(txt_curr, txt_ghost)
     }
     
@@ -275,6 +298,56 @@ server <- function(input, output, session) {
            border = c("blue", "orange", NA, NA),
            lwd = c(NA, NA, 1), lty = c(NA, NA, 2), col = c(NA, NA, "black"),
            bty = "n")
+  })
+
+  # 8. Stress vs window length summary table
+  output$summaryTable <- renderUI({
+    d <- data_gen()
+
+    # Annual aggregation (shared across all windows)
+    yearIndex <- floor((d$Month - 1) / 12) + 1
+    natAnnual <- as.numeric(tapply(d$Natural, yearIndex, mean))
+    postAnnual <- as.numeric(tapply(d$Post, yearIndex, mean))
+
+    windows <- c(5, 10, 20, 30)
+    rows <- lapply(windows, function(w) {
+      natRoll <- manual_roll(natAnnual, w)
+      postRoll <- manual_roll(postAnnual, w)
+      valid <- !is.na(natRoll)
+      nat <- natRoll[valid]
+      post <- postRoll[valid]
+      calc_metrics(nat, post)
+    })
+
+    # Build HTML table using Shiny tags
+    header_row <- tags$tr(
+      tags$th("Window"),
+      tags$th(HTML("&Delta;")),
+      tags$th(HTML("&sigma; (per window)")),
+      tags$th(HTML("&Delta;/&sigma;")),
+      tags$th("Overlap"),
+      tags$th("Stress"),
+      tags$th("Kuiper V")
+    )
+
+    body_rows <- lapply(seq_along(windows), function(i) {
+      m <- rows[[i]]
+      ds <- if (is.na(m$delta_sigma)) "NA" else format(m$delta_sigma, digits = 3)
+      tags$tr(
+        tags$td(paste0(windows[i], " yr")),
+        tags$td(format(m$delta, digits = 3)),
+        tags$td(format(m$sigma, digits = 3)),
+        tags$td(ds),
+        tags$td(format(m$overlap, digits = 3)),
+        tags$td(format(m$stress, digits = 3)),
+        tags$td(format(m$kuiper_v, digits = 3))
+      )
+    })
+
+    tags$table(class = "table table-striped table-hover table-bordered",
+      tags$thead(header_row),
+      tags$tbody(body_rows)
+    )
   })
 }
 
