@@ -14,7 +14,7 @@ Nathan et al. (2019) suggest one way to calculate hydrological "stress" from flo
 
 However, implementations of Nathan et al.'s "stress score" (e.g. John et al., 2023; Morden et al., 2025) often apply a sliding window to calculate the relevant indicator of hydrological alteration (e.g. mean annual flows) through time. This introduces a statistical artefact that this model explores: window dependency.
 
-Users should be aware of a mathematical property of this score: the stress score is dependent on the sample size (window length) used to calculate the flow metric.
+Users should be aware of a mathematical property of this score: the stress score is dependent on the window length used to calculate the flow metric.
 
 ## Interpreting window dependency: sample size vs averaging
 
